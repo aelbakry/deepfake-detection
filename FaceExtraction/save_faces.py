@@ -13,14 +13,14 @@ import os
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-filenames = glob.glob('/home/aelbakry1999/dfdc/dfdc_train_part_0/*.mp4')[:5]
+filenames = glob.glob('/home/aelbakry1999/sample_data/train_sample_videos/*.mp4')
 
 
 
 fast_mtcnn = FastMTCNN(
-    stride=4,
+    stride=1,
     resize=1,
-    margin=14,
+    margin=40,
     factor=0.6,
     keep_all=True,
     device=device
@@ -34,14 +34,14 @@ def run_detection(fast_mtcnn, filenames):
     frames = []
     frames_processed = 0
     faces_detected = 0
-    batch_size = 60
+    batch_size = 64
     start = time.time()
 
     for filename in tqdm(filenames):
 
         v_cap = FileVideoStream(filename).start()
         # v_len = int(v_cap.stream.get(cv2.CAP_PROP_FRAME_COUNT))
-        v_len = 10
+        v_len = 15
 
         for j in range(v_len):
 
@@ -58,18 +58,19 @@ def run_detection(fast_mtcnn, filenames):
 
                 faces = fast_mtcnn(frames)
 
-                mtcnn(faces, save_paths)
+                if len(faces) > 0:
+                    mtcnn(faces, save_paths)
 
                 frames_processed += len(frames)
                 faces_detected += len(faces)
                 frames = []
 
 
-                print(
-                    f'Frames per second: {frames_processed / (time.time() - start):.3f},',
-                    f'faces detected: {faces_detected}\r',
-                    end=''
-                )
+                # print(
+                #     f'Frames per second: {frames_processed / (time.time() - start):.3f},',
+                #     f'faces detected: {faces_detected}\r',
+                #     end=''
+                # )
 
         v_cap.stop()
 

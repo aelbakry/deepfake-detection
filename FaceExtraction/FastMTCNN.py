@@ -39,7 +39,6 @@ class FastMTCNN(object):
             for box in boxes[box_ind]:
                 box = [int(b) for b in box]
                 face_image = frame[box[1]:box[3], box[0]:box[2]]
-
                 faces.append(cv2.resize(face_image, (160, 160)))
 
 
