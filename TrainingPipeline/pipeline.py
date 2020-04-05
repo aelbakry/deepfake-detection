@@ -26,6 +26,9 @@ def get_paths(x):
             raise Exception
     return image_paths
 
+def read_img(path):
+    return cv2.cvtColor(cv2.imread(path),cv2.COLOR_BGR2RGB)
+
 
 paths=[]
 y=[]
@@ -38,5 +41,9 @@ for x in images:
         print(err)
         pass
 
-print(paths[:10])
-print(len(y))
+print(np.shape(paths))
+print(np.shape(y))
+
+X=[]
+for img in tqdm(paths):
+    X.append(read_img(img[0]))
