@@ -6,7 +6,19 @@ from tqdm import tqdm,trange
 from facenet_pytorch import MTCNN, InceptionResnetV1, extract_face
 import torch
 from torchvision.transforms import ToTensor
+from keras.layers import Dense, Flatten, Dropout, ZeroPadding3D, Bidirectional
+from keras.layers.recurrent import LSTM
+from keras.models import Sequential
+from keras.optimizers import Adam, RMSprop, SGD
+from keras.layers.wrappers import TimeDistributed
+from keras.layers.convolutional import (Conv2D, MaxPooling3D, Conv3D,
+    MaxPooling2D)
+from keras.utils import to_categorical
+import matplotlib.pyplot as plt
+import matplotlib
 
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # import torch.nn as nn
 # import torch.nn.functional as F
@@ -30,6 +42,7 @@ def get_paths(x):
         path = '/home/aelbakry1999/images/train_sample_videos/'+ x.replace('.mp4', '') + '/frame' + str(num) +'.jpeg'
         image_paths.append(path)
         if not os.path.exists(path):
+            print(path)
             raise Exception
     return image_paths
 
@@ -39,30 +52,21 @@ def read_img(path):
         frames.append(cv2.cvtColor(cv2.imread(path[i]),cv2.COLOR_BGR2RGB))
     return frames
 
-# def process_faces(faces, resnet):
-#     # Filter out frames without faces
-#     faces = torch.cat(torch.from_numpy(faces)).to(device)
-#
-#     # Generate facial feature vectors using a pretrained model
-#     embeddings = resnet(faces)
-#
-#     # Calculate centroid for video and distance of each face's feature vector from centroid
-#     # centroid = embeddings.mean(dim=0)
-#     # x = (embeddings - centroid).norm(dim=1).cpu().numpy()
-#
-#     return embeddings.numpy()
 
 paths=[]
 y=[]
 images = list(df_train.columns.values)
 for x in images:
+
     try:
         paths.append(get_paths(x))
-        y.append(LABELS.index(df_train[x]['label']))
+        y.append(to_categorical(np.full((max_frames), LABELS.index(df_train[x]['label'])), num_classes=2))
     except Exception as err:
         # print(err)
         pass
 
+
+# y = to_categorical(y, num_classes=2)
 print(np.shape(paths))
 print(np.shape(y))
 
@@ -72,18 +76,64 @@ for img in tqdm(paths):
 
 print(np.shape(X))
 
-X_embedded=[]
-
 
 tf_img = lambda i: ToTensor()(i).unsqueeze(0)
 embeddings = lambda input: resnet(input)
 
-list_embs = []
+X_embedded = []
 with torch.no_grad():
     for faces in tqdm(X):
-        t = tf_img(faces[0]).to(device)
-        e = embeddings(t).squeeze().cpu().tolist()
-        list_embs.append(e)
+        vid_embs = []
+        for i in range(max_frames):
+            t = tf_img(faces[i]).to(device)
+            e = embeddings(t).squeeze().cpu().tolist()
+            vid_embs.append(e)
+        X_embedded.append(vid_embs)
 
 
-print(np.shape(list_embs))
+print(np.shape(X_embedded))
+
+
+def lstm():
+    """Build a simple LSTM network. On the training sample"""
+    # Model.
+    model = Sequential()
+    model.add(LSTM(256, return_sequences=True, input_shape=(10, 512) ,dropout=0.5))
+    model.add(TimeDistributed(Dense(128, activation='relu')))
+    model.add(Dropout(0.5))
+    model.add(Dense(2, activation='softmax'))
+
+    return model
+
+model = lstm()
+
+optimizer = Adam(lr=1e-5/10, decay=1e-6)
+model.compile(loss='binary_crossentropy', optimizer=optimizer,
+                   metrics=['accuracy'])
+
+print(model.summary())
+
+X_embedded = np.reshape(X_embedded, (302, 10, 512))
+y = np.reshape(y, (302,10, 2))
+history = model.fit(X_embedded, y, epochs=100, batch_size=1, validation_split=0.3)
+
+# print(history)
+
+plt.subplot(2, 1, 1)
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_accuracy'])
+plt.title('model accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['train', 'test'], loc='upper left')
+
+
+plt.subplot(2, 1, 2)
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('model loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['train', 'test'], loc='upper left')
+plt.show()
+plt.savefig('/home/aelbakry1999/Results/accuracy_loss.png')
