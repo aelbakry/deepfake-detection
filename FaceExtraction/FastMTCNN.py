@@ -1,5 +1,6 @@
 from facenet_pytorch import MTCNN
 import cv2
+import numpy as np
 
 class FastMTCNN(object):
     """Fast MTCNN implementation."""
@@ -38,8 +39,10 @@ class FastMTCNN(object):
                 continue
             for box in boxes[box_ind]:
                 box = [int(b) for b in box]
-                face_image = frame[box[1]:box[3], box[0]:box[2]]
-                faces.append(cv2.resize(face_image, (160, 160)))
+                box = [0 if i < 0 else i for i in box]
+                # print(box)
+                face_image = cv2.resize(frame[box[1]:box[3], box[0]:box[2]] , (160, 160))
+                faces.append(face_image)
 
 
         return faces

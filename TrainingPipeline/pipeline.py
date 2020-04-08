@@ -52,10 +52,12 @@ def read_img(path):
         frames.append(cv2.cvtColor(cv2.imread(path[i]),cv2.COLOR_BGR2RGB))
     return frames
 
+# df_train = df_train[df_train['split'] == 'train']
 
 paths=[]
 y=[]
 images = list(df_train.columns.values)
+print(len(images))
 for x in images:
 
     try:
@@ -98,16 +100,16 @@ def lstm():
     """Build a simple LSTM network. On the training sample"""
     # Model.
     model = Sequential()
-    model.add(LSTM(256, return_sequences=True, input_shape=(10, 512) ,dropout=0.5))
-    model.add(TimeDistributed(Dense(128, activation='relu')))
+    model.add(LSTM(512, return_sequences=True, input_shape=(10, 512) ,dropout=0.5))
+    model.add(TimeDistributed(Dense(256, activation='relu')))
     model.add(Dropout(0.5))
-    model.add(Dense(2, activation='softmax'))
+    model.add(TimeDistributed(Dense(2, activation='softmax')))
 
     return model
 
 model = lstm()
 
-optimizer = Adam(lr=1e-5/10, decay=1e-6)
+optimizer = Adam(lr=4e-5/10, decay=1e-6)
 model.compile(loss='binary_crossentropy', optimizer=optimizer,
                    metrics=['accuracy'])
 
@@ -115,7 +117,7 @@ print(model.summary())
 
 X_embedded = np.reshape(X_embedded, (302, 10, 512))
 y = np.reshape(y, (302,10, 2))
-history = model.fit(X_embedded, y, epochs=100, batch_size=1, validation_split=0.3)
+history = model.fit(X_embedded, y, epochs=100, batch_size=32, validation_split=0.2, shuffle=True)
 
 # print(history)
 
