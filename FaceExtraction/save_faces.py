@@ -13,7 +13,7 @@ import os
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-filenames = glob.glob('/home/aelbakry1999/sample_data/test_videos/*.mp4')
+filenames = glob.glob('/home/aelbakry1999/dfdc/dfdc_train_part_2/*.mp4')
 
 
 
@@ -41,7 +41,7 @@ def run_detection(fast_mtcnn, filenames):
 
         v_cap = FileVideoStream(filename).start()
         # v_len = int(v_cap.stream.get(cv2.CAP_PROP_FRAME_COUNT))
-        v_len = 15
+        v_len = 20
 
         for j in range(v_len):
 
