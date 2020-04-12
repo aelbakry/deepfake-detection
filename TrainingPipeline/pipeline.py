@@ -271,20 +271,27 @@ print(model.summary())
 
 X_embedded = np.reshape(X_embedded, (dataset_size, max_frames, 512))
 y = np.reshape(y, (dataset_size, max_frames, 2))
-history = model.fit(X_embedded, y, epochs=10, batch_size=64, validation_split=0.2, shuffle=True)
+history = model.fit(X_embedded, y, epochs=1, batch_size=64, validation_split=0.2, shuffle=True)
 
 model.save_weights("model.h5")
 # print(history)
 
 y_preds = model.predict_classes(np.reshape(X_test_embedded, (np.shape(X_test_embedded)[0], max_frames, 512)))
-y_preds = np.argmax(y_preds, axis=1)
+# y_preds = np.argmax(y_preds, axis=0)
 
 print(np.shape(y_preds))
 print(np.shape(y_test))
 
-conf_matrix = confusion_matrix(y_test, y_preds)
+conf_matrix = confusion_matrix(np.array(y_test).argmax(axis=0), y_preds.argmax(axis=0))
+
+tn, fp, fn, tp = confusion_matrix(np.array(y_test).argmax(axis=0), y_preds.argmax(axis=0)).ravel()
 
 print(conf_matrix)
+print(tn)
+print(fp)
+print(fn)
+print(tp)
+
 
 
 plt.subplot(2, 1, 1)
