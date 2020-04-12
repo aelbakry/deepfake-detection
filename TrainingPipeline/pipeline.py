@@ -16,6 +16,9 @@ from keras.layers.convolutional import (Conv2D, MaxPooling3D, Conv3D,
 from keras.utils import to_categorical
 import matplotlib.pyplot as plt
 import matplotlib
+from sklearn.metrics import confusion_matrix
+
+
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -26,11 +29,16 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import warnings
 warnings.filterwarnings("ignore")
 
-max_frames = 10
+max_frames = 5
 df_train1 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_0/metadata.json')
 df_train2 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_1/metadata.json')
 df_train3 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_2/metadata.json')
 df_train4 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_3/metadata.json')
+df_train5 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_4/metadata.json')
+
+df_test = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_5/metadata.json')
+
+
 
 
 df_train_list = [df_train1 , df_train2]
@@ -42,7 +50,7 @@ resnet = InceptionResnetV1(pretrained='vggface2', device=device).eval()
 
 
 
-
+#read respective path for each training folder
 def get_paths(x):
     image_paths=[]
 
@@ -87,6 +95,29 @@ def get_paths4(x):
             raise Exception
     return image_paths
 
+def get_paths5(x):
+    image_paths=[]
+
+    for num in range(max_frames):
+        path = '/home/aelbakry1999/images/dfdc_train_part_4/'+ x.replace('.mp4', '') + '/frame' + str(num) +'.jpeg'
+        image_paths.append(path)
+        if not os.path.exists(path):
+            # print(path)
+            raise Exception
+    return image_paths
+
+def get_paths_test(x):
+    image_paths=[]
+
+    for num in range(max_frames):
+        path = '/home/aelbakry1999/images/dfdc_train_part_5/'+ x.replace('.mp4', '') + '/frame' + str(num) +'.jpeg'
+        image_paths.append(path)
+        if not os.path.exists(path):
+            # print(path)
+            raise Exception
+    return image_paths
+
+#function to read video frames from given paths
 def read_img(path):
     frames = []
     for i in range(max_frames):
@@ -104,7 +135,7 @@ for x in images1:
 
     try:
         paths.append(get_paths(x))
-        y.append(to_categorical(np.full((max_frames), LABELS.index(df_train1[x]['label'])), num_classes=2))
+        y.append(np.full((max_frames), LABELS.index(df_train1[x]['label'])))
     except Exception as err:
         # print(err)
         pass
@@ -115,7 +146,7 @@ for x in images2:
 
     try:
         paths.append(get_paths2(x))
-        y.append(to_categorical(np.full((max_frames), LABELS.index(df_train2[x]['label'])), num_classes=2))
+        y.append(np.full((max_frames), LABELS.index(df_train2[x]['label'])))
     except Exception as err:
         # print(err)
         pass
@@ -126,7 +157,7 @@ for x in images3:
 
     try:
         paths.append(get_paths3(x))
-        y.append(to_categorical(np.full((max_frames), LABELS.index(df_train3[x]['label'])), num_classes=2))
+        y.append(np.full((max_frames), LABELS.index(df_train3[x]['label'])))
     except Exception as err:
         # print(err)
         pass
@@ -137,19 +168,55 @@ for x in images4:
 
     try:
         paths.append(get_paths4(x))
-        y.append(to_categorical(np.full((max_frames), LABELS.index(df_train4[x]['label'])), num_classes=2))
+        y.append(np.full((max_frames), LABELS.index(df_train4[x]['label'])))
     except Exception as err:
         # print(err)
         pass
 
+images5 = list(df_train5.columns.values)
+print(len(images5))
+for x in images5:
+
+    try:
+        paths.append(get_paths5(x))
+        y.append(np.full((max_frames), LABELS.index(df_train5[x]['label'])))
+    except Exception as err:
+        # print(err)
+        pass
+
+y = to_categorical(y, num_classes=2)
+
+paths_test = []
+y_test = []
+
+images_test = list(df_test.columns.values)
+print(len(images_test))
+for x in images_test:
+
+    try:
+        paths_test.append(get_paths_test(x))
+        y_test.append(np.full((max_frames), LABELS.index(df_test[x]['label'])))
+    except Exception as err:
+        # print(err)
+        pass
+
+
 print(np.shape(paths))
 print(np.shape(y))
+
+print(np.shape(paths_test))
+print(np.shape(y_test))
 
 X=[]
 for img in tqdm(paths):
     X.append(read_img(img))
 
+
 print(np.shape(X))
+
+X_test=[]
+for img in tqdm(paths_test):
+    X_test.append(read_img(img))
 
 dataset_size = len(X)
 
@@ -169,6 +236,17 @@ with torch.no_grad():
 
 print(np.shape(X_embedded))
 
+X_test_embedded = []
+with torch.no_grad():
+    for faces in tqdm(X_test):
+        vid_embs = []
+        for i in range(max_frames):
+            t = tf_img(faces[i]).to(device)
+            e = embeddings(t).squeeze().cpu().tolist()
+            vid_embs.append(e)
+        X_test_embedded.append(vid_embs)
+
+print(np.shape(X_test_embedded))
 
 def lstm():
     """Build a simple LSTM network. On the training sample"""
@@ -183,17 +261,31 @@ def lstm():
 
 model = lstm()
 
-optimizer = Adam(lr=1e-5/5, decay=1e-6)
+optimizer = Adam(lr=1e-5, decay=1e-6)
 model.compile(loss='binary_crossentropy', optimizer=optimizer,
                    metrics=['accuracy'])
+
+
 
 print(model.summary())
 
 X_embedded = np.reshape(X_embedded, (dataset_size, max_frames, 512))
 y = np.reshape(y, (dataset_size, max_frames, 2))
-history = model.fit(X_embedded, y, epochs=100, batch_size=64, validation_split=0.2, shuffle=True)
+history = model.fit(X_embedded, y, epochs=10, batch_size=64, validation_split=0.2, shuffle=True)
 
+model.save_weights("model.h5")
 # print(history)
+
+y_preds = model.predict_classes(np.reshape(X_test_embedded, (np.shape(X_test_embedded)[0], max_frames, 512)))
+y_preds = np.argmax(y_preds, axis=1)
+
+print(np.shape(y_preds))
+print(np.shape(y_test))
+
+conf_matrix = confusion_matrix(y_test, y_preds)
+
+print(conf_matrix)
+
 
 plt.subplot(2, 1, 1)
 plt.plot(history.history['accuracy'])

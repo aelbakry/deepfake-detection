@@ -13,7 +13,7 @@ import os
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-filenames = glob.glob('/home/aelbakry1999/dfdc/dfdc_train_part_2/*.mp4')
+filenames = glob.glob('/home/aelbakry1999/dfdc/dfdc_train_part_5/*.mp4')
 
 
 
