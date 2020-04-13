@@ -35,6 +35,7 @@ df_train2 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_1/metadata.jso
 df_train3 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_2/metadata.json')
 df_train4 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_3/metadata.json')
 df_train5 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_4/metadata.json')
+df_train6 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_6/metadata.json')
 
 df_test = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_5/metadata.json')
 
@@ -105,6 +106,18 @@ def get_paths5(x):
             # print(path)
             raise Exception
     return image_paths
+
+def get_paths6(x):
+    image_paths=[]
+
+    for num in range(max_frames):
+        path = '/home/aelbakry1999/images/dfdc_train_part_6/'+ x.replace('.mp4', '') + '/frame' + str(num) +'.jpeg'
+        image_paths.append(path)
+        if not os.path.exists(path):
+            # print(path)
+            raise Exception
+    return image_paths
+
 
 def get_paths_test(x):
     image_paths=[]
@@ -180,6 +193,17 @@ for x in images5:
     try:
         paths.append(get_paths5(x))
         y.append(LABELS.index(df_train5[x]['label']))
+    except Exception as err:
+        # print(err)
+        pass
+
+images6 = list(df_train6.columns.values)
+print(len(images6))
+for x in images6:
+
+    try:
+        paths.append(get_paths6(x))
+        y.append(LABELS.index(df_train6[x]['label']))
     except Exception as err:
         # print(err)
         pass
@@ -261,7 +285,7 @@ def lstm():
 
 model = lstm()
 
-optimizer = Adam(lr=1e-5/5, decay=1e-6)
+optimizer = Adam(lr=1e-5, decay=1e-6)
 model.compile(loss='binary_crossentropy', optimizer=optimizer,
                    metrics=['accuracy'])
 
