@@ -29,7 +29,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import warnings
 warnings.filterwarnings("ignore")
 
-max_frames = 5
+max_frames = 10
 df_train1 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_0/metadata.json')
 df_train2 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_1/metadata.json')
 df_train3 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_2/metadata.json')
@@ -135,7 +135,7 @@ for x in images1:
 
     try:
         paths.append(get_paths(x))
-        y.append(np.full((max_frames), LABELS.index(df_train1[x]['label'])))
+        y.append(LABELS.index(df_train1[x]['label']))
     except Exception as err:
         # print(err)
         pass
@@ -146,7 +146,7 @@ for x in images2:
 
     try:
         paths.append(get_paths2(x))
-        y.append(np.full((max_frames), LABELS.index(df_train2[x]['label'])))
+        y.append(LABELS.index(df_train2[x]['label']))
     except Exception as err:
         # print(err)
         pass
@@ -157,7 +157,7 @@ for x in images3:
 
     try:
         paths.append(get_paths3(x))
-        y.append(np.full((max_frames), LABELS.index(df_train3[x]['label'])))
+        y.append( LABELS.index(df_train3[x]['label']))
     except Exception as err:
         # print(err)
         pass
@@ -168,7 +168,7 @@ for x in images4:
 
     try:
         paths.append(get_paths4(x))
-        y.append(np.full((max_frames), LABELS.index(df_train4[x]['label'])))
+        y.append(LABELS.index(df_train4[x]['label']))
     except Exception as err:
         # print(err)
         pass
@@ -179,7 +179,7 @@ for x in images5:
 
     try:
         paths.append(get_paths5(x))
-        y.append(np.full((max_frames), LABELS.index(df_train5[x]['label'])))
+        y.append(LABELS.index(df_train5[x]['label']))
     except Exception as err:
         # print(err)
         pass
@@ -195,12 +195,12 @@ for x in images_test:
 
     try:
         paths_test.append(get_paths_test(x))
-        y_test.append(np.full((max_frames), LABELS.index(df_test[x]['label'])))
+        y_test.append(LABELS.index(df_test[x]['label']))
     except Exception as err:
         # print(err)
         pass
 
-
+y_test = to_categorical(y_test, num_classes=2)
 print(np.shape(paths))
 print(np.shape(y))
 
@@ -252,8 +252,8 @@ def lstm():
     """Build a simple LSTM network. On the training sample"""
     # Model.
     model = Sequential()
-    model.add(LSTM(2048, return_sequences=True, input_shape=(max_frames, 512) ,dropout=0.5))
-    model.add(TimeDistributed(Dense(512, activation='relu')))
+    model.add(LSTM(2048, return_sequences=False, input_shape=(max_frames, 512) ,dropout=0.5))
+    model.add((Dense(512, activation='relu')))
     model.add(Dropout(0.5))
     model.add(Dense(2, activation='softmax'))
 
@@ -261,7 +261,7 @@ def lstm():
 
 model = lstm()
 
-optimizer = Adam(lr=1e-5, decay=1e-6)
+optimizer = Adam(lr=1e-5/5, decay=1e-6)
 model.compile(loss='binary_crossentropy', optimizer=optimizer,
                    metrics=['accuracy'])
 
@@ -270,8 +270,10 @@ model.compile(loss='binary_crossentropy', optimizer=optimizer,
 print(model.summary())
 
 X_embedded = np.reshape(X_embedded, (dataset_size, max_frames, 512))
-y = np.reshape(y, (dataset_size, max_frames, 2))
-history = model.fit(X_embedded, y, epochs=1, batch_size=64, validation_split=0.2, shuffle=True)
+# y = np.reshape(y, (dataset_size, max_frames, 2))
+y = np.reshape(y, (dataset_size, 2))
+
+history = model.fit(X_embedded, y, epochs=20, batch_size=64, shuffle=True)
 
 model.save_weights("model.h5")
 # print(history)
@@ -279,24 +281,38 @@ model.save_weights("model.h5")
 y_preds = model.predict_classes(np.reshape(X_test_embedded, (np.shape(X_test_embedded)[0], max_frames, 512)))
 # y_preds = np.argmax(y_preds, axis=0)
 
-print(np.shape(y_preds))
+print(y_preds)
 print(np.shape(y_test))
 
-conf_matrix = confusion_matrix(np.array(y_test).argmax(axis=0), y_preds.argmax(axis=0))
+y_test = np.array(y_test).argmax(axis=1)
+y_preds = np.reshape(y_preds, (np.shape(y_preds)[0], 1))
 
-tn, fp, fn, tp = confusion_matrix(np.array(y_test).argmax(axis=0), y_preds.argmax(axis=0)).ravel()
+print(y_test)
+print(y_preds)
 
+conf_matrix = confusion_matrix(y_test, y_preds)
+
+tn, fp, fn, tp = confusion_matrix(y_test, y_preds).ravel()
+
+print("-------------- Confusion Matrix -------------- ")
 print(conf_matrix)
-print(tn)
-print(fp)
-print(fn)
-print(tp)
+
+
+print('True Positives: {}, True Negatives: {}, False Positives: {}, False Negatives: {}'.format(tp, tn, fp, fn))
+
+precision = tp / (tp + fp)
+accuracy = (tp + tn) / (tp + tn + fp + fn)
+recall = tp / (tp + fn)
+f1 = 2*(precision*recall)/ (precision+recall)
+print("-------------- Model Scores -------------- ")
+print('Precision: {}, Accuracy: {}, Recall: {}, F1-score: {}'.format(precision, accuracy, recall, f1))
+
 
 
 
 plt.subplot(2, 1, 1)
 plt.plot(history.history['accuracy'])
-plt.plot(history.history['val_accuracy'])
+# plt.plot(history.history['val_accuracy'])
 plt.title('model accuracy')
 plt.ylabel('accuracy')
 plt.xlabel('epoch')
@@ -305,7 +321,7 @@ plt.legend(['train', 'test'], loc='upper left')
 
 plt.subplot(2, 1, 2)
 plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
+# plt.plot(history.history['val_loss'])
 plt.title('model loss')
 plt.ylabel('loss')
 plt.xlabel('epoch')
