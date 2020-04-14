@@ -19,19 +19,10 @@ from tqdm import tqdm,trange
 # import matplotlib.pyplot as plt
 # import matplotlib
 
-youtube_faces = sorted(os.listdir('/home/aelbakry1999/YouTubeFaces/aligned_images_DB'))[:10]
+youtube_faces = sorted(os.listdir('/home/aelbakry1999/YouTubeFaces/aligned_images_DB'))
 youtube_faces_path = '/home/aelbakry1999/YouTubeFaces/aligned_images_DB'
 X_ = []
-# for folder in tqdm(youtube_faces):
-# for dirs in os.walk(youtube_faces):
-#     print(dirs)
-    # for file in files:
-    #     print(str(os.path.join(subdir, file)))
-
-        # im = read_img(f'../input/ffhq-face-data-set/thumbnails128x128/{file}')
-        # im = cv2.resize(im, (150,150))
-        # X_.append(im)
-
+y_ = []
 for dirpaths in tqdm(youtube_faces):
     dirpath = sorted(os.listdir(os.path.join(youtube_faces_path, dirpaths)))
     for subdirpaths in dirpath:
@@ -39,10 +30,11 @@ for dirpaths in tqdm(youtube_faces):
         frames_path = []
         for filename in subdirpath:
             path = os.path.join(youtube_faces_path, dirpaths, subdirpaths, filename)
-            frames_path.append(cv2.cvtColor(cv2.imread(path),cv2.COLOR_BGR2RGB))
-
+            frames_path.append(cv2.resize(cv2.cvtColor(cv2.imread(path),cv2.COLOR_BGR2RGB), (160, 160)))
+        y_.append(0)
         X_.append(frames_path)
 
 
 
 print(np.shape(X_))
+print(np.shape(y_))

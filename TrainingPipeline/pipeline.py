@@ -36,8 +36,10 @@ df_train3 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_2/metadata.jso
 df_train4 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_3/metadata.json')
 df_train5 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_4/metadata.json')
 df_train6 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_5/metadata.json')
+df_train6 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_6/metadata.json')
 
-df_test = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_6/metadata.json')
+
+df_test = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_7/metadata.json')
 
 # youtube_faces = pd.read_json('/home/aelbakry1999/YouTubeFaces/aligned_images_DB')
 
@@ -212,19 +214,28 @@ for x in images6:
         pass
 
 #balance with YouTube faces dataset
-youtube_faces = os.listdir('/home/aelbakry1999/YouTubeFaces/aligned_images_DB')
+youtube_faces = sorted(os.listdir('/home/aelbakry1999/YouTubeFaces/aligned_images_DB'))
+youtube_faces_path = '/home/aelbakry1999/YouTubeFaces/aligned_images_DB'
 X_ = []
-for folder in tqdm(youtube_faces):
-    for subdir, dirs, files in os.walk(folder):
+y_ = []
+for dirpaths in tqdm(youtube_faces):
+    dirpath = sorted(os.listdir(os.path.join(youtube_faces_path, dirpaths)))
+    for subdirpaths in dirpath:
+        subdirpath = sorted(os.listdir(os.path.join(youtube_faces_path, dirpaths, subdirpaths)))[:10]
+        frames_path = []
+        for filename in subdirpath:
+            path = os.path.join(youtube_faces_path, dirpaths, subdirpaths, filename)
+            frames_path.append(cv2.resize(cv2.cvtColor(cv2.imread(path),cv2.COLOR_BGR2RGB), (160, 160)))
+        y_.append(0)
+        X_.append(frames_path)
 
-        im = read_img(f'../input/ffhq-face-data-set/thumbnails128x128/{file}')
-        im = cv2.resize(im, (150,150))
-        X_.append(im)
 
-for subdir, dirs, files in os.walk(rootdir):
-    for file in files:
-        print(os.path.join(subdir, file))
 
+print("X_", np.shape(X_))
+print("y_", np.shape(y_))
+print("y before balancing", np.shape(y))
+
+y = y + y_
 y = to_categorical(y, num_classes=2)
 
 paths_test = []
@@ -242,8 +253,8 @@ for x in images_test:
         pass
 
 y_test = to_categorical(y_test, num_classes=2)
-print(np.shape(paths))
-print(np.shape(y))
+# print(np.shape(paths))
+print("y after balancing", np.shape(y))
 
 print(np.shape(paths_test))
 print(np.shape(y_test))
@@ -252,8 +263,12 @@ X=[]
 for img in tqdm(paths):
     X.append(read_img(img))
 
+print("X before balancing", np.shape(X))
 
-print(np.shape(X))
+
+X = X+ X_
+
+print("X after balancing", np.shape(X))
 
 X_test=[]
 for img in tqdm(paths_test):
