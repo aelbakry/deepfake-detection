@@ -1,153 +1,48 @@
-import pandas as pd
+# import pandas as pd
 import numpy as np
 import cv2
 import os
+import glob
+
 from tqdm import tqdm,trange
-from facenet_pytorch import MTCNN, InceptionResnetV1, extract_face
-import torch
-from torchvision.transforms import ToTensor
-from keras.layers import Dense, Flatten, Dropout, ZeroPadding3D, Bidirectional
-from keras.layers.recurrent import LSTM
-from keras.models import Sequential
-from keras.optimizers import Adam, RMSprop, SGD
-from keras.layers.wrappers import TimeDistributed
-from keras.layers.convolutional import (Conv2D, MaxPooling3D, Conv3D,
-    MaxPooling2D)
-from keras.utils import to_categorical
-import matplotlib.pyplot as plt
-import matplotlib
+# from facenet_pytorch import MTCNN, InceptionResnetV1, extract_face
+# import torch
+# from torchvision.transforms import ToTensor
+# from keras.layers import Dense, Flatten, Dropout, ZeroPadding3D, Bidirectional
+# from keras.layers.recurrent import LSTM
+# from keras.models import Sequential
+# from keras.optimizers import Adam, RMSprop, SGD
+# from keras.layers.wrappers import TimeDistributed
+# from keras.layers.convolutional import (Conv2D, MaxPooling3D, Conv3D,
+#     MaxPooling2D)
+# from keras.utils import to_categorical
+# import matplotlib.pyplot as plt
+# import matplotlib
 
+youtube_faces = sorted(os.listdir('/home/aelbakry1999/YouTubeFaces/aligned_images_DB'))[:10]
+youtube_faces_path = '/home/aelbakry1999/YouTubeFaces/aligned_images_DB'
+X_ = []
+# for folder in tqdm(youtube_faces):
+# for dirs in os.walk(youtube_faces):
+#     print(dirs)
+    # for file in files:
+    #     print(str(os.path.join(subdir, file)))
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+        # im = read_img(f'../input/ffhq-face-data-set/thumbnails128x128/{file}')
+        # im = cv2.resize(im, (150,150))
+        # X_.append(im)
 
-# import torch.nn as nn
-# import torch.nn.functional as F
+for dirpaths in tqdm(youtube_faces):
+    dirpath = sorted(os.listdir(os.path.join(youtube_faces_path, dirpaths)))
+    for subdirpaths in dirpath:
+        subdirpath = sorted(os.listdir(os.path.join(youtube_faces_path, dirpaths, subdirpaths)))[:10]
+        frames_path = []
+        for filename in subdirpath:
+            path = os.path.join(youtube_faces_path, dirpaths, subdirpaths, filename)
+            frames_path.append(cv2.cvtColor(cv2.imread(path),cv2.COLOR_BGR2RGB))
 
-import warnings
-warnings.filterwarnings("ignore")
-
-max_frames = 10
-df_train1 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_0/metadata.json')
-df_train2 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_1/metadata.json')
-df_train3 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_2/metadata.json')
-df_train4 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_3/metadata.json')
-
-
-df_train_list = [df_train1 , df_train2]
-# df_train = df_train2
-
-LABELS = ['REAL','FAKE']
-device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-resnet = InceptionResnetV1(pretrained='vggface2', device=device).eval()
-
-
-
-
-def get_paths(df_train, index):
-    paths=[]
-    y=[]
-
-    dataframe = list(df_train.columns.values)
-    for x in dataframe:
-        image_paths=[]
-
-
-        # try:
-        for num in range(max_frames):
-            path = '/home/aelbakry1999/images/dfdc_train_part_'+str(index)+"/"+ x.replace('.mp4', '') + '/frame' + str(num) +'.jpeg'
-            image_paths.append(path)
-            if not os.path.exists(path):
-                print(path)
-                    # raise Exception
-        # except Exception as err:
-            # print(err)
-            # pass
-        paths.append(image_paths)
-        y.append(to_categorical(np.full((max_frames), LABELS.index(df_train[x]['label'])), num_classes=2))
-
-    return paths, y
-
-
-def read_img(path):
-    frames = []
-    for i in range(max_frames):
-        frames.append(cv2.cvtColor(cv2.imread(path[i]),cv2.COLOR_BGR2RGB))
-    return frames
+        X_.append(frames_path)
 
 
 
-paths, y = get_paths(df_train1, 0)
-
-
-print(np.shape(paths))
-print(np.shape(y))
-
-X=[]
-for img in tqdm(paths):
-    X.append(read_img(img))
-
-print(np.shape(X))
-
-dataset_size = len(X)
-
-tf_img = lambda i: ToTensor()(i).unsqueeze(0)
-embeddings = lambda input: resnet(input)
-
-X_embedded = []
-with torch.no_grad():
-    for faces in tqdm(X):
-        vid_embs = []
-        for i in range(max_frames):
-            t = tf_img(faces[i]).to(device)
-            e = embeddings(t).squeeze().cpu().tolist()
-            vid_embs.append(e)
-        X_embedded.append(vid_embs)
-
-
-print(np.shape(X_embedded))
-
-
-def lstm():
-    """Build a simple LSTM network. On the training sample"""
-    # Model.
-    model = Sequential()
-    model.add(LSTM(2048, return_sequences=True, input_shape=(max_frames, 512) ,dropout=0.5))
-    model.add(TimeDistributed(Dense(512, activation='relu')))
-    model.add(Dropout(0.5))
-    model.add(Dense(2, activation='softmax'))
-
-    return model
-
-model = lstm()
-
-optimizer = Adam(lr=1e-5, decay=1e-6)
-model.compile(loss='binary_crossentropy', optimizer=optimizer,
-                   metrics=['accuracy'])
-
-print(model.summary())
-
-X_embedded = np.reshape(X_embedded, (dataset_size, max_frames, 512))
-y = np.reshape(y, (dataset_size, max_frames, 2))
-history = model.fit(X_embedded, y, epochs=15, batch_size=64, validation_split=0.2, shuffle=True)
-
-model.save_weights("model.h5")
-# print(history)
-
-plt.subplot(2, 1, 1)
-plt.plot(history.history['accuracy'])
-plt.plot(history.history['val_accuracy'])
-plt.title('model accuracy')
-plt.ylabel('accuracy')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
-
-
-plt.subplot(2, 1, 2)
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
-plt.show()
-plt.savefig('/home/aelbakry1999/Results/accuracy_loss.png')
+print(np.shape(X_))

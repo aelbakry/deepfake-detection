@@ -39,7 +39,7 @@ df_train6 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_5/metadata.jso
 
 df_test = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_6/metadata.json')
 
-youtube_faces = pd.read_json('/home/aelbakry1999/YouTubeFaces/aligned_images_DB')
+# youtube_faces = pd.read_json('/home/aelbakry1999/YouTubeFaces/aligned_images_DB')
 
 
 
@@ -210,6 +210,20 @@ for x in images6:
     except Exception as err:
         # print(err)
         pass
+
+#balance with YouTube faces dataset
+youtube_faces = os.listdir('/home/aelbakry1999/YouTubeFaces/aligned_images_DB')
+X_ = []
+for folder in tqdm(youtube_faces):
+    for subdir, dirs, files in os.walk(folder):
+
+        im = read_img(f'../input/ffhq-face-data-set/thumbnails128x128/{file}')
+        im = cv2.resize(im, (150,150))
+        X_.append(im)
+
+for subdir, dirs, files in os.walk(rootdir):
+    for file in files:
+        print(os.path.join(subdir, file))
 
 y = to_categorical(y, num_classes=2)
 
