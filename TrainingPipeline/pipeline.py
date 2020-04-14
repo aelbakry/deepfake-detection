@@ -35,9 +35,12 @@ df_train2 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_1/metadata.jso
 df_train3 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_2/metadata.json')
 df_train4 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_3/metadata.json')
 df_train5 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_4/metadata.json')
-df_train6 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_6/metadata.json')
+df_train6 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_5/metadata.json')
 
-df_test = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_5/metadata.json')
+df_test = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_6/metadata.json')
+
+youtube_faces = pd.read_json('/home/aelbakry1999/YouTubeFaces/aligned_images_DB')
+
 
 
 
@@ -111,7 +114,7 @@ def get_paths6(x):
     image_paths=[]
 
     for num in range(max_frames):
-        path = '/home/aelbakry1999/images/dfdc_train_part_6/'+ x.replace('.mp4', '') + '/frame' + str(num) +'.jpeg'
+        path = '/home/aelbakry1999/images/dfdc_train_part_5/'+ x.replace('.mp4', '') + '/frame' + str(num) +'.jpeg'
         image_paths.append(path)
         if not os.path.exists(path):
             # print(path)
@@ -123,7 +126,7 @@ def get_paths_test(x):
     image_paths=[]
 
     for num in range(max_frames):
-        path = '/home/aelbakry1999/images/dfdc_train_part_5/'+ x.replace('.mp4', '') + '/frame' + str(num) +'.jpeg'
+        path = '/home/aelbakry1999/images/dfdc_train_part_6/'+ x.replace('.mp4', '') + '/frame' + str(num) +'.jpeg'
         image_paths.append(path)
         if not os.path.exists(path):
             # print(path)
@@ -285,7 +288,7 @@ def lstm():
 
 model = lstm()
 
-optimizer = Adam(lr=1e-5, decay=1e-6)
+optimizer = Adam(lr=1e-5*10, decay=1e-6)
 model.compile(loss='binary_crossentropy', optimizer=optimizer,
                    metrics=['accuracy'])
 
@@ -297,7 +300,7 @@ X_embedded = np.reshape(X_embedded, (dataset_size, max_frames, 512))
 # y = np.reshape(y, (dataset_size, max_frames, 2))
 y = np.reshape(y, (dataset_size, 2))
 
-history = model.fit(X_embedded, y, epochs=20, batch_size=64, shuffle=True)
+history = model.fit(X_embedded, y, epochs=30, batch_size=64, shuffle=True)
 
 model.save_weights("model.h5")
 # print(history)
