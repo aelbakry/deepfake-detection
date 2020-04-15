@@ -36,10 +36,13 @@ df_train3 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_2/metadata.jso
 df_train4 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_3/metadata.json')
 df_train5 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_4/metadata.json')
 df_train6 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_5/metadata.json')
-df_train6 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_6/metadata.json')
+df_train7 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_6/metadata.json')
+df_train8 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_7/metadata.json')
+df_train9 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_8/metadata.json')
+df_train10 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_9/metadata.json')
 
 
-df_test = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_7/metadata.json')
+df_test = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_10/metadata.json')
 
 # youtube_faces = pd.read_json('/home/aelbakry1999/YouTubeFaces/aligned_images_DB')
 
@@ -123,12 +126,56 @@ def get_paths6(x):
             raise Exception
     return image_paths
 
+def get_paths7(x):
+    image_paths=[]
+
+    for num in range(max_frames):
+        path = '/home/aelbakry1999/images/dfdc_train_part_6/'+ x.replace('.mp4', '') + '/frame' + str(num) +'.jpeg'
+        image_paths.append(path)
+        if not os.path.exists(path):
+            # print(path)
+            raise Exception
+    return image_paths
+
+def get_paths8(x):
+    image_paths=[]
+
+    for num in range(max_frames):
+        path = '/home/aelbakry1999/images/dfdc_train_part_7/'+ x.replace('.mp4', '') + '/frame' + str(num) +'.jpeg'
+        image_paths.append(path)
+        if not os.path.exists(path):
+            # print(path)
+            raise Exception
+    return image_paths
+
+def get_paths9(x):
+    image_paths=[]
+
+    for num in range(max_frames):
+        path = '/home/aelbakry1999/images/dfdc_train_part_8/'+ x.replace('.mp4', '') + '/frame' + str(num) +'.jpeg'
+        image_paths.append(path)
+        if not os.path.exists(path):
+            # print(path)
+            raise Exception
+    return image_paths
+
+def get_paths10(x):
+    image_paths=[]
+
+    for num in range(max_frames):
+        path = '/home/aelbakry1999/images/dfdc_train_part_9/'+ x.replace('.mp4', '') + '/frame' + str(num) +'.jpeg'
+        image_paths.append(path)
+        if not os.path.exists(path):
+            # print(path)
+            raise Exception
+    return image_paths
+
 
 def get_paths_test(x):
     image_paths=[]
 
     for num in range(max_frames):
-        path = '/home/aelbakry1999/images/dfdc_train_part_6/'+ x.replace('.mp4', '') + '/frame' + str(num) +'.jpeg'
+        path = '/home/aelbakry1999/images/dfdc_train_part_10/'+ x.replace('.mp4', '') + '/frame' + str(num) +'.jpeg'
         image_paths.append(path)
         if not os.path.exists(path):
             # print(path)
@@ -212,6 +259,52 @@ for x in images6:
     except Exception as err:
         # print(err)
         pass
+images7 = list(df_train7.columns.values)
+print(len(images7))
+for x in images7:
+
+    try:
+        paths.append(get_paths7(x))
+        y.append(LABELS.index(df_train7[x]['label']))
+    except Exception as err:
+        # print(err)
+        pass
+
+images8 = list(df_train8.columns.values)
+print(len(images8))
+for x in images8:
+
+    try:
+        paths.append(get_paths8(x))
+        y.append(LABELS.index(df_train8[x]['label']))
+    except Exception as err:
+        # print(err)
+        pass
+
+
+images9 = list(df_train8.columns.values)
+print(len(images9))
+for x in images9:
+
+    try:
+        paths.append(get_paths9(x))
+        y.append(LABELS.index(df_train9[x]['label']))
+    except Exception as err:
+        # print(err)
+        pass
+
+images10 = list(df_train10.columns.values)
+print(len(images10))
+for x in images10:
+
+    try:
+        paths.append(get_paths10(x))
+        y.append(LABELS.index(df_train10[x]['label']))
+    except Exception as err:
+        # print(err)
+        pass
+
+
 
 #balance with YouTube faces dataset
 youtube_faces = sorted(os.listdir('/home/aelbakry1999/YouTubeFaces/aligned_images_DB'))
@@ -221,7 +314,7 @@ y_ = []
 for dirpaths in tqdm(youtube_faces):
     dirpath = sorted(os.listdir(os.path.join(youtube_faces_path, dirpaths)))
     for subdirpaths in dirpath:
-        subdirpath = sorted(os.listdir(os.path.join(youtube_faces_path, dirpaths, subdirpaths)))[:10]
+        subdirpath = sorted(os.listdir(os.path.join(youtube_faces_path, dirpaths, subdirpaths)))[:max_frames]
         frames_path = []
         for filename in subdirpath:
             path = os.path.join(youtube_faces_path, dirpaths, subdirpaths, filename)
@@ -329,7 +422,7 @@ X_embedded = np.reshape(X_embedded, (dataset_size, max_frames, 512))
 # y = np.reshape(y, (dataset_size, max_frames, 2))
 y = np.reshape(y, (dataset_size, 2))
 
-history = model.fit(X_embedded, y, epochs=30, batch_size=64, shuffle=True)
+history = model.fit(X_embedded, y, epochs=10, batch_size=64, shuffle=True)
 
 model.save_weights("model.h5")
 # print(history)
@@ -344,7 +437,7 @@ y_test = np.array(y_test).argmax(axis=1)
 y_preds = np.reshape(y_preds, (np.shape(y_preds)[0], 1))
 
 print(y_test)
-print(y_preds)
+# print(y_preds)
 
 conf_matrix = confusion_matrix(y_test, y_preds)
 
