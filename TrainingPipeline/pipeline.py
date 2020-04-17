@@ -401,8 +401,8 @@ def lstm():
     """Build a simple LSTM network. On the training sample"""
     # Model.
     model = Sequential()
-    model.add(LSTM(2048, return_sequences=False, input_shape=(max_frames, 512) ,dropout=0.5))
-    model.add((Dense(512, activation='relu')))
+    model.add(LSTM(512, return_sequences=False, input_shape=(max_frames, 512) ,dropout=0.5))
+    model.add((Dense(256, activation='relu')))
     model.add(Dropout(0.5))
     model.add(Dense(2, activation='softmax'))
 
@@ -422,7 +422,7 @@ X_embedded = np.reshape(X_embedded, (dataset_size, max_frames, 512))
 # y = np.reshape(y, (dataset_size, max_frames, 2))
 y = np.reshape(y, (dataset_size, 2))
 
-history = model.fit(X_embedded, y, epochs=10, batch_size=64, shuffle=True)
+history = model.fit(X_embedded, y, epochs=2, batch_size=64, shuffle=True)
 
 model.save_weights("model.h5")
 # print(history)
