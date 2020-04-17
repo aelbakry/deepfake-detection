@@ -171,6 +171,18 @@ def get_paths10(x):
     return image_paths
 
 
+def get_paths_vox(x):
+    image_paths=[]
+
+    for num in range(max_frames):
+        path = '/home/aelbakry1999/images/VoxCeleb2/'+ x + '/frame' + str(num) +'.jpeg'
+        image_paths.append(path)
+        if not os.path.exists(path):
+            # print(path)
+            raise Exception
+    return image_paths
+
+
 def get_paths_test(x):
     image_paths=[]
 
@@ -304,6 +316,16 @@ for x in images10:
         # print(err)
         pass
 
+images_vox = sorted(os.listdir('/home/aelbakry1999/images/VoxCeleb2/'))[:3000]
+print(len(images_vox))
+for x in images_vox:
+
+    try:
+        paths.append(get_paths_vox(x))
+        y.append(0)
+    except Exception as err:
+        # print(err)
+        pass
 
 
 #balance with YouTube faces dataset

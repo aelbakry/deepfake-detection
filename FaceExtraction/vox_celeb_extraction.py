@@ -10,9 +10,13 @@ from facenet_pytorch import MTCNN
 import numpy as np
 import os
 
+
+start = 60000
+stop = 90000
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-filenames = glob.glob('/home/aelbakry1999/VoxCeleb2/dev/mp4/**/*.mp4', recursive = True)
+filenames = glob.glob('/home/aelbakry1999/VoxCeleb2/dev/mp4/**/*.mp4', recursive = True)[start:stop]
 
 
 fast_mtcnn = FastMTCNN(
@@ -34,13 +38,16 @@ def run_detection(fast_mtcnn, filenames):
     faces_detected = 0
     batch_size = 64
     start = time.time()
-    video_index = 0
+    video_index = start
 
     for filename in tqdm(filenames):
 
         v_cap = FileVideoStream(filename).start()
-        # v_len = int(v_cap.stream.get(cv2.CAP_PROP_FRAME_COUNT))
-        v_len = 20
+        v_lent = int(v_cap.stream.get(cv2.CAP_PROP_FRAME_COUNT))
+        v_len = 15
+
+        if v_lent < v_len:
+            v_len = v_lent
 
         for j in range(v_len):
 
