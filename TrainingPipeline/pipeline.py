@@ -19,8 +19,6 @@ import matplotlib
 from sklearn.metrics import confusion_matrix
 
 
-
-
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # import torch.nn as nn
@@ -48,15 +46,11 @@ df_test = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_10/metadata.json
 
 
 
-
-
 df_train_list = [df_train1 , df_train2]
 df_train = df_train2
 
 LABELS = ['REAL','FAKE']
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-resnet = InceptionResnetV1(pretrained='vggface2', device=device).eval()
-
 
 
 #read respective path for each training folder
@@ -170,7 +164,7 @@ def get_paths10(x):
             raise Exception
     return image_paths
 
-
+"""Method to get paths for VoxCeleb2 Dataset"""
 def get_paths_vox(x):
     image_paths=[]
 
@@ -182,7 +176,7 @@ def get_paths_vox(x):
             raise Exception
     return image_paths
 
-
+"""Method to get paths for testing Dataset"""
 def get_paths_test(x):
     image_paths=[]
 
@@ -194,7 +188,7 @@ def get_paths_test(x):
             raise Exception
     return image_paths
 
-#function to read video frames from given paths
+"""function to read video frames from given paths"""
 def read_img(path):
     frames = []
     for i in range(max_frames):
@@ -205,9 +199,8 @@ def read_img(path):
 paths=[]
 y=[]
 
-
 images1 = list(df_train1.columns.values)
-print(len(images1))
+print("Images 1" , len(images1))
 for x in images1:
 
     try:
@@ -218,7 +211,7 @@ for x in images1:
         pass
 
 images2 = list(df_train2.columns.values)
-print(len(images2))
+print("Images 2" ,len(images2))
 for x in images2:
 
     try:
@@ -229,7 +222,7 @@ for x in images2:
         pass
 
 images3 = list(df_train3.columns.values)
-print(len(images3))
+print("Images 3" ,len(images3))
 for x in images3:
 
     try:
@@ -240,7 +233,7 @@ for x in images3:
         pass
 
 images4 = list(df_train4.columns.values)
-print(len(images4))
+print("Images 4" ,len(images4))
 for x in images4:
 
     try:
@@ -251,7 +244,7 @@ for x in images4:
         pass
 
 images5 = list(df_train5.columns.values)
-print(len(images5))
+print("Images 5" ,len(images5))
 for x in images5:
 
     try:
@@ -261,98 +254,74 @@ for x in images5:
         # print(err)
         pass
 
-images6 = list(df_train6.columns.values)
-print(len(images6))
-for x in images6:
+# images6 = list(df_train6.columns.values)
+# print("Images 6" ,len(images6))
+# for x in images6:
+#
+#     try:
+#         paths.append(get_paths6(x))
+#         y.append(LABELS.index(df_train6[x]['label']))
+#     except Exception as err:
+#         # print(err)
+#         pass
 
-    try:
-        paths.append(get_paths6(x))
-        y.append(LABELS.index(df_train6[x]['label']))
-    except Exception as err:
-        # print(err)
-        pass
-images7 = list(df_train7.columns.values)
-print(len(images7))
-for x in images7:
+# images7 = list(df_train7.columns.values)
+# print("Images 7" ,len(images7))
+# for x in images7:
+#
+#     try:
+#         paths.append(get_paths7(x))
+#         y.append(LABELS.index(df_train7[x]['label']))
+#     except Exception as err:
+#         # print(err)
+#         pass
 
-    try:
-        paths.append(get_paths7(x))
-        y.append(LABELS.index(df_train7[x]['label']))
-    except Exception as err:
-        # print(err)
-        pass
+# images8 = list(df_train8.columns.values)
+# print("Images 8" ,len(images8))
+# for x in images8:
+#
+#     try:
+#         paths.append(get_paths8(x))
+#         y.append(LABELS.index(df_train8[x]['label']))
+#     except Exception as err:
+#         # print(err)
+#         pass
+#
+#
+# images9 = list(df_train8.columns.values)
+# print(len(images9))
+# for x in images9:
+#
+#     try:
+#         paths.append(get_paths9(x))
+#         y.append(LABELS.index(df_train9[x]['label']))
+#     except Exception as err:
+#         # print(err)
+#         pass
+#
+# images10 = list(df_train10.columns.values)
+# print(len(images10))
+# for x in images10:
+#
+#     try:
+#         paths.append(get_paths10(x))
+#         y.append(LABELS.index(df_train10[x]['label']))
+#     except Exception as err:
+#         # print(err)
+#         pass
 
-images8 = list(df_train8.columns.values)
-print(len(images8))
-for x in images8:
-
-    try:
-        paths.append(get_paths8(x))
-        y.append(LABELS.index(df_train8[x]['label']))
-    except Exception as err:
-        # print(err)
-        pass
-
-
-images9 = list(df_train8.columns.values)
-print(len(images9))
-for x in images9:
-
-    try:
-        paths.append(get_paths9(x))
-        y.append(LABELS.index(df_train9[x]['label']))
-    except Exception as err:
-        # print(err)
-        pass
-
-images10 = list(df_train10.columns.values)
-print(len(images10))
-for x in images10:
-
-    try:
-        paths.append(get_paths10(x))
-        y.append(LABELS.index(df_train10[x]['label']))
-    except Exception as err:
-        # print(err)
-        pass
-
-images_vox = sorted(os.listdir('/home/aelbakry1999/images/VoxCeleb2/'))[:3000]
-print(len(images_vox))
+images_vox = os.listdir('/home/aelbakry1999/images/VoxCeleb2/')[:1000]
+paths_vox = []
+y_vox = []
+print("Images Vox ", len(images_vox))
 for x in images_vox:
 
     try:
-        paths.append(get_paths_vox(x))
-        y.append(0)
+        paths_vox.append(get_paths_vox(x))
+        y_vox.append(0)
     except Exception as err:
         # print(err)
         pass
-
-
-#balance with YouTube faces dataset
-youtube_faces = sorted(os.listdir('/home/aelbakry1999/YouTubeFaces/aligned_images_DB'))
-youtube_faces_path = '/home/aelbakry1999/YouTubeFaces/aligned_images_DB'
-X_ = []
-y_ = []
-for dirpaths in tqdm(youtube_faces):
-    dirpath = sorted(os.listdir(os.path.join(youtube_faces_path, dirpaths)))
-    for subdirpaths in dirpath:
-        subdirpath = sorted(os.listdir(os.path.join(youtube_faces_path, dirpaths, subdirpaths)))[:max_frames]
-        frames_path = []
-        for filename in subdirpath:
-            path = os.path.join(youtube_faces_path, dirpaths, subdirpaths, filename)
-            frames_path.append(cv2.resize(cv2.cvtColor(cv2.imread(path),cv2.COLOR_BGR2RGB), (160, 160)))
-        y_.append(0)
-        X_.append(frames_path)
-
-
-
-print("X_", np.shape(X_))
-print("y_", np.shape(y_))
-print("y before balancing", np.shape(y))
-
-y = y + y_
-y = to_categorical(y, num_classes=2)
-
 paths_test = []
 y_test = []
 
@@ -367,64 +336,93 @@ for x in images_test:
         # print(err)
         pass
 
-y_test = to_categorical(y_test, num_classes=2)
-# print(np.shape(paths))
+
+#balance with YouTube faces dataset
+# youtube_faces = sorted(os.listdir('/home/aelbakry1999/YouTubeFaces/aligned_images_DB'))
+# youtube_faces_path = '/home/aelbakry1999/YouTubeFaces/aligned_images_DB'
+# X_ = []
+# y_ = []
+# for dirpaths in tqdm(youtube_faces):
+#     dirpath = sorted(os.listdir(os.path.join(youtube_faces_path, dirpaths)))
+#     for subdirpaths in dirpath:
+#         subdirpath = sorted(os.listdir(os.path.join(youtube_faces_path, dirpaths, subdirpaths)))[:max_frames]
+#         frames_path = []
+#         for filename in subdirpath:
+#             path = os.path.join(youtube_faces_path, dirpaths, subdirpaths, filename)
+#             frames_path.append(cv2.resize(cv2.cvtColor(cv2.imread(path),cv2.COLOR_BGR2RGB), (160, 160)))
+#         y_.append(0)
+#         X_.append(frames_path)
+
+
+
+# print("X_", np.shape(X_))
+# print("y_", np.shape(y_))
+
+resnet = InceptionResnetV1(pretrained='vggface2', device=device).eval()
+
+def embed(frames):
+    faces_embedded = []
+    tf_img = lambda i: ToTensor()(i).unsqueeze(0)
+    embeddings = lambda input: resnet(input)
+
+    with torch.no_grad():
+        for faces in tqdm(frames):
+            vid_embs = []
+            for i in range(max_frames):
+                t = tf_img(faces[i]).to(device)
+                e = embeddings(t).squeeze().cpu().tolist()
+                vid_embs.append(e)
+            faces_embedded.append(vid_embs)
+
+    return  faces_embedded
+
+print("y before balancing", np.shape(y))
+y = y + y_vox
 print("y after balancing", np.shape(y))
 
-print(np.shape(paths_test))
-print(np.shape(y_test))
+y = to_categorical(y, num_classes=2) #convert y training to one hot encodings
+y_test = to_categorical(y_test, num_classes=2) #convert y testing to one hot encodings
+# print(np.shape(paths))
+# print("y after balancing", np.shape(y))
+
+print("Paths test shape" ,np.shape(paths_test))
+print("y test shape" ,np.shape(y_test))
 
 X=[]
 for img in tqdm(paths):
     X.append(read_img(img))
 
+X_vox=[]
+for img in tqdm(paths_vox):
+    X_vox.append(read_img(img))
+
+
 print("X before balancing", np.shape(X))
-
-
-X = X+ X_
-
+X = X + X_vox
 print("X after balancing", np.shape(X))
+dataset_size = len(X)
+
 
 X_test=[]
 for img in tqdm(paths_test):
     X_test.append(read_img(img))
 
-dataset_size = len(X)
-
-tf_img = lambda i: ToTensor()(i).unsqueeze(0)
-embeddings = lambda input: resnet(input)
-
-X_embedded = []
-with torch.no_grad():
-    for faces in tqdm(X):
-        vid_embs = []
-        for i in range(max_frames):
-            t = tf_img(faces[i]).to(device)
-            e = embeddings(t).squeeze().cpu().tolist()
-            vid_embs.append(e)
-        X_embedded.append(vid_embs)
+print("X_test shape", np.shape(X_test))
 
 
-print(np.shape(X_embedded))
+X_embedded = embed(X)
+X_test_embedded = embed(X_test)
 
-X_test_embedded = []
-with torch.no_grad():
-    for faces in tqdm(X_test):
-        vid_embs = []
-        for i in range(max_frames):
-            t = tf_img(faces[i]).to(device)
-            e = embeddings(t).squeeze().cpu().tolist()
-            vid_embs.append(e)
-        X_test_embedded.append(vid_embs)
 
-print(np.shape(X_test_embedded))
+print("X_embedded shape", np.shape(X_embedded))
+print("X_test_embedded shape",np.shape(X_test_embedded))
 
 def lstm():
     """Build a simple LSTM network. On the training sample"""
     # Model.
     model = Sequential()
-    model.add(LSTM(512, return_sequences=False, input_shape=(max_frames, 512) ,dropout=0.5))
-    model.add((Dense(256, activation='relu')))
+    model.add(LSTM(2048, return_sequences=False, input_shape=(max_frames, 512) ,dropout=0.5))
+    model.add((Dense(512, activation='relu')))
     model.add(Dropout(0.5))
     model.add(Dense(2, activation='softmax'))
 
@@ -432,34 +430,30 @@ def lstm():
 
 model = lstm()
 
-optimizer = Adam(lr=1e-5*10, decay=1e-6)
-model.compile(loss='binary_crossentropy', optimizer=optimizer,
-                   metrics=['accuracy'])
-
-
-
+optimizer = Adam(lr=1e-5*7, decay=1e-6)
+model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 print(model.summary())
 
+
+
 X_embedded = np.reshape(X_embedded, (dataset_size, max_frames, 512))
-# y = np.reshape(y, (dataset_size, max_frames, 2))
+X_test_embedded = np.reshape(X_test_embedded, (np.shape(X_test_embedded)[0], max_frames, 512))
+
 y = np.reshape(y, (dataset_size, 2))
 
-history = model.fit(X_embedded, y, epochs=2, batch_size=64, shuffle=True)
+history = model.fit(X_embedded, y, epochs=10, batch_size=64, shuffle=True, validation_split=0.2)
 
 model.save_weights("model.h5")
-# print(history)
 
-y_preds = model.predict_classes(np.reshape(X_test_embedded, (np.shape(X_test_embedded)[0], max_frames, 512)))
-# y_preds = np.argmax(y_preds, axis=0)
+y_preds = model.predict_classes(X_test_embedded)
 
-print(y_preds)
-print(np.shape(y_test))
 
-y_test = np.array(y_test).argmax(axis=1)
+y_test = np.array(y_test).argmax(axis=1) #convert back from one hot encodings
 y_preds = np.reshape(y_preds, (np.shape(y_preds)[0], 1))
 
-print(y_test)
-# print(y_preds)
+print("Predictions", y_preds)
+print("True Labels", y_test)
+
 
 conf_matrix = confusion_matrix(y_test, y_preds)
 
