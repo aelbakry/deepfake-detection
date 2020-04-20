@@ -254,63 +254,63 @@ for x in images5:
         # print(err)
         pass
 
-# images6 = list(df_train6.columns.values)
-# print("Images 6" ,len(images6))
-# for x in images6:
-#
-#     try:
-#         paths.append(get_paths6(x))
-#         y.append(LABELS.index(df_train6[x]['label']))
-#     except Exception as err:
-#         # print(err)
-#         pass
+images6 = list(df_train6.columns.values)
+print("Images 6" ,len(images6))
+for x in images6:
 
-# images7 = list(df_train7.columns.values)
-# print("Images 7" ,len(images7))
-# for x in images7:
-#
-#     try:
-#         paths.append(get_paths7(x))
-#         y.append(LABELS.index(df_train7[x]['label']))
-#     except Exception as err:
-#         # print(err)
-#         pass
+    try:
+        paths.append(get_paths6(x))
+        y.append(LABELS.index(df_train6[x]['label']))
+    except Exception as err:
+        # print(err)
+        pass
 
-# images8 = list(df_train8.columns.values)
-# print("Images 8" ,len(images8))
-# for x in images8:
-#
-#     try:
-#         paths.append(get_paths8(x))
-#         y.append(LABELS.index(df_train8[x]['label']))
-#     except Exception as err:
-#         # print(err)
-#         pass
-#
-#
-# images9 = list(df_train8.columns.values)
-# print(len(images9))
-# for x in images9:
-#
-#     try:
-#         paths.append(get_paths9(x))
-#         y.append(LABELS.index(df_train9[x]['label']))
-#     except Exception as err:
-#         # print(err)
-#         pass
-#
-# images10 = list(df_train10.columns.values)
-# print(len(images10))
-# for x in images10:
-#
-#     try:
-#         paths.append(get_paths10(x))
-#         y.append(LABELS.index(df_train10[x]['label']))
-#     except Exception as err:
-#         # print(err)
-#         pass
+images7 = list(df_train7.columns.values)
+print("Images 7" ,len(images7))
+for x in images7:
 
-images_vox = os.listdir('/home/aelbakry1999/images/VoxCeleb2/')[:1000]
+    try:
+        paths.append(get_paths7(x))
+        y.append(LABELS.index(df_train7[x]['label']))
+    except Exception as err:
+        # print(err)
+        pass
+
+images8 = list(df_train8.columns.values)
+print("Images 8" ,len(images8))
+for x in images8:
+
+    try:
+        paths.append(get_paths8(x))
+        y.append(LABELS.index(df_train8[x]['label']))
+    except Exception as err:
+        # print(err)
+        pass
+
+
+images9 = list(df_train8.columns.values)
+print(len(images9))
+for x in images9:
+
+    try:
+        paths.append(get_paths9(x))
+        y.append(LABELS.index(df_train9[x]['label']))
+    except Exception as err:
+        # print(err)
+        pass
+
+images10 = list(df_train10.columns.values)
+print(len(images10))
+for x in images10:
+
+    try:
+        paths.append(get_paths10(x))
+        y.append(LABELS.index(df_train10[x]['label']))
+    except Exception as err:
+        # print(err)
+        pass
+
+images_vox = os.listdir('/home/aelbakry1999/images/VoxCeleb2/')[:2000]
 paths_vox = []
 y_vox = []
 print("Images Vox ", len(images_vox))
@@ -441,7 +441,7 @@ X_test_embedded = np.reshape(X_test_embedded, (np.shape(X_test_embedded)[0], max
 
 y = np.reshape(y, (dataset_size, 2))
 
-history = model.fit(X_embedded, y, epochs=10, batch_size=64, shuffle=True, validation_split=0.2)
+history = model.fit(X_embedded, y, epochs=20, batch_size=64, shuffle=True, validation_split=0.2)
 
 model.save_weights("model.h5")
 
