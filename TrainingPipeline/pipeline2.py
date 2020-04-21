@@ -18,6 +18,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 from sklearn.metrics import confusion_matrix
 import time
+from PIL import Image,ImageEnhance
+
 
 
 
@@ -67,6 +69,14 @@ def flip_horizontal(path):
         frames_flipped.append(cv2.flip(cv2.cvtColor(cv2.imread(path[i]),cv2.COLOR_BGR2RGB), 1))
     return frames_flipped
 
+
+def contrast(path):
+    factor = 3
+    frames_contrast = []
+    for i in range(max_frames):
+        frames_contrast.append(ImageEnhance.Contrast(Image.open(path[i])).enhance(factor))
+    return frames_contrast
+
 def Cloning(y):
     y_copy = y[:]
     return y_copy
@@ -80,7 +90,7 @@ def read_img(path):
 
 
 
-def load_data(index, df_train, split):
+def load_data(index, df_train):
     paths=[]
     y=[]
 
@@ -134,7 +144,7 @@ y=[]
 """Loading all paths and y_labels in df_train_all """
 print("Loading training paths and y values from JSON files")
 for index in tqdm(range(np.shape(df_train_all)[0])):
-    path, labels = load_data(index, df_train_all[index], "training")
+    path, labels = load_data(index, df_train_all[index])
     paths.extend(path)
     y.extend(labels)
 
@@ -143,13 +153,17 @@ y_test=[]
 
 print("Loading testing paths and y values from JSON files")
 for index in tqdm(range(np.shape(df_test_all)[0])):
-    path, labels = load_data(index+np.shape(df_train_all)[0], df_test_all[index], "testing")
+    path, labels = load_data(index+np.shape(df_train_all)[0], df_test_all[index])
     paths_test.extend(path)
     y_test.extend(labels)
 
 
 # paths = np.array(paths)
 # y = np.array(y)
+
+y_clone = Cloning(y)
+y = y + y_clone + y_clone  #replicating targets after flipping and adding new  contrast
+
 
 
 paths_test = np.array(paths_test)
@@ -174,9 +188,11 @@ for img in tqdm(paths):
 print("Loading frames flipped")
 for img in tqdm(paths):
     X.append(flip_horizontal(img))
-    
-y_clone = Cloning(y)
-y = y + y_clone #replicating targets after flipping
+
+print("Loading frames new Contrast factor 3")
+for img in tqdm(paths):
+    X.append(contrast(img))
+
 
 
 print("X training", np.shape(X))
@@ -226,12 +242,12 @@ def lstm():
 
 model = lstm()
 
-optimizer = Adam(lr=1e-5*5, decay=1e-6)
+optimizer = Adam(lr=1e-5*10, decay=1e-6)
 model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 print(model.summary())
 
 
-history = model.fit(X_embedded, y, epochs=5, batch_size=64, shuffle=True)
+history = model.fit(X_embedded, y, epochs=20, batch_size=64, shuffle=True)
 
 model.save_weights("model.h5")
 
