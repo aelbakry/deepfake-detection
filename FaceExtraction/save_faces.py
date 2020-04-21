@@ -13,14 +13,14 @@ import os
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-filenames = glob.glob('/home/aelbakry1999/dfdc/dfdc_train_part_2/*.mp4')
+filenames = glob.glob('/home/aelbakry1999/dfdc/dfdc_train_part_4/*.mp4')
 
-
+margin = 0
 
 fast_mtcnn = FastMTCNN(
     stride=1,
     resize=1,
-    margin=15,
+    margin=margin,
     factor=0.6,
     keep_all=True,
     device=device
@@ -54,7 +54,7 @@ def run_detection(fast_mtcnn, filenames):
                 fname = os.sep.join(filename.split(os.sep)[-2:])
                 fname = os.path.splitext(fname)[0]
 
-                save_paths = [f'images/{fname}/frame{i}.jpeg' for i in range(len(frames))]
+                save_paths = [f'images/margin_{margin}/{fname}/frame{i}.jpeg' for i in range(len(frames))]
 
                 faces = fast_mtcnn(frames)
 
