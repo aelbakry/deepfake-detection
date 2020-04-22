@@ -19,6 +19,7 @@ import matplotlib
 from sklearn.metrics import confusion_matrix
 import time
 from PIL import Image,ImageEnhance
+import tensorflow as tf
 
 
 
@@ -34,7 +35,7 @@ warnings.filterwarnings("ignore")
 
 
 max_frames = 5
-max_df = 3
+max_df = 2
 df_train0 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_0/metadata.json')
 df_train1 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_1/metadata.json')
 df_train2 = pd.read_json('/home/aelbakry1999/dfdc/dfdc_train_part_2/metadata.json')
@@ -69,6 +70,12 @@ def flip_horizontal(path):
         frames_flipped.append(cv2.flip(cv2.cvtColor(cv2.imread(path[i]),cv2.COLOR_BGR2RGB), 1))
     return frames_flipped
 
+def saturation(path):
+    factor = 3
+    frames_saturation = []
+    for i in range(max_frames):
+        frames_saturation.append(ImageEnhance.Color(Image.open(path[i])).enhance(factor))
+    return frames_saturation
 
 def contrast(path):
     factor = 3
@@ -90,7 +97,7 @@ def read_img(path):
 
 
 
-def load_data(index, df_train):
+def load_data(index, df_train, frames_sequence, split):
     paths=[]
     y=[]
 
@@ -102,11 +109,20 @@ def load_data(index, df_train):
 
         try:
             for num in range(max_frames):
-                path = '/home/aelbakry1999/images/margin_0/dfdc_train_part_' + str(index) +"/"+ value.replace('.mp4', '') + '/frame' + str(num) +'.jpeg'
-                image_paths.append(path)
-                if not os.path.exists(path):
+                if frames_sequence==1:
+                    path = '/home/aelbakry1999/images/margin_0/dfdc_train_part_' + str(index) +"/"+ value.replace('.mp4', '') + '/frame' + str(num) +'.jpeg'
+                    image_paths.append(path)
+                    if not os.path.exists(path):
                     # print(path)
-                    raise Exception
+                        raise Exception
+                elif frames_sequence==2 and split=="train":
+                    id = num + max_frames
+                    path = '/home/aelbakry1999/images/margin_0/dfdc_train_part_' + str(index) +"/"+ value.replace('.mp4', '') + '/frame' + str(id) +'.jpeg'
+                    image_paths.append(path)
+                    if not os.path.exists(path):
+                    # print(path)
+                        raise Exception
+
 
             paths.append(image_paths)
             y.append(LABELS.index(df_train[value]['label']))
@@ -144,25 +160,45 @@ y=[]
 """Loading all paths and y_labels in df_train_all """
 print("Loading training paths and y values from JSON files")
 for index in tqdm(range(np.shape(df_train_all)[0])):
-    path, labels = load_data(index, df_train_all[index])
+    path, labels = load_data(index, df_train_all[index], 1, "train")
     paths.extend(path)
     y.extend(labels)
+
+paths_2=[]
+y_2=[]
+
+"""Loading all paths and y_labels in df_train_all for second max_frames video sequence """
+print("Loading training paths2 and y2 values from JSON files")
+for index in tqdm(range(np.shape(df_train_all)[0])):
+    path, labels = load_data(index, df_train_all[index], 2, "train")
+    paths_2.extend(path)
+    y_2.extend(labels)
 
 paths_test=[]
 y_test=[]
 
 print("Loading testing paths and y values from JSON files")
 for index in tqdm(range(np.shape(df_test_all)[0])):
-    path, labels = load_data(index+np.shape(df_train_all)[0], df_test_all[index])
+    path, labels = load_data(index+np.shape(df_train_all)[0], df_test_all[index], 1, "test")
     paths_test.extend(path)
     y_test.extend(labels)
 
+print("paths shape", np.shape(paths))
+print("path2 shape", np.shape(paths_2))
+
+# print("y shape", np.shape(y))
+# print("y_2 shape", np.shape(y_2))
 
 # paths = np.array(paths)
 # y = np.array(y)
 
+paths = paths + paths_2
+
+print("paths shape after combining", np.shape(paths))
+
+y = y + y_2
 y_clone = Cloning(y)
-y = y + y_clone + y_clone  #replicating targets after flipping and adding new  contrast
+y = y + y_clone + y_clone + y_clone  #replicating targets after flipping and adding new  contrast & new saturation
 
 
 
@@ -193,7 +229,9 @@ print("Loading frames new Contrast factor 3")
 for img in tqdm(paths):
     X.append(contrast(img))
 
-
+print("Loading frames new saturation factor 3")
+for img in tqdm(paths):
+    X.append(saturation(img))
 
 print("X training", np.shape(X))
 print("Y training", np.shape(y))
@@ -247,7 +285,7 @@ model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accurac
 print(model.summary())
 
 
-history = model.fit(X_embedded, y, epochs=20, batch_size=64, shuffle=True)
+history = model.fit(X_embedded, y, epochs=10, batch_size=64, shuffle=True)
 
 model.save_weights("model.h5")
 
