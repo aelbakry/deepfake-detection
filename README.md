@@ -19,7 +19,12 @@ pip install tqdm
 pip install torchvision
 ```
 
-## Authors
+### Dataset
+
+This project uses the Deepfake Detetction Challenge Dataset dataset which could be found [here](https://www.kaggle.com/c/deepfake-detection-challenge/data)
+
+
+### Authors
 
 * **Ahmed Mohamed** 
 
